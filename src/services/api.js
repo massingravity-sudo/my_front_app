@@ -2,9 +2,10 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
-  : import.meta.env.DEV
-    ? 'http://localhost:5000/api'
-    : 'https://web-production-6fe43.up.railway.app/api';
+
+
+  : 'https://web-production-6fe43.up.railway.app/api'
+
 
 // Intercepteur pour ajouter le token
 axios.interceptors.request.use(
