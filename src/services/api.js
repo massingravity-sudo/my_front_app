@@ -1,5 +1,5 @@
 import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://web-production-6fe43.up.railway.app';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://massibns10.pythonanywhere.com';
 
 const API_URL = `${BASE_URL}/api`;
 
