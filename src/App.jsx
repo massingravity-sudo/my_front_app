@@ -24,7 +24,7 @@ import Evaluation from './pages/Evaluation'
 import Primes from './pages/Primes'
 import SuiviEquipe from './pages/SuiviEquipe'
 import Recrutement from './pages/Recrutement'
-
+import RegisterEmployee from './pages/RegisterEmployee';
 /* ── Loader commun ── */
 function Loader() {
   return (
@@ -85,7 +85,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-
+      <Route path="/register-employee" element={<RegisterEmployee />} />
       {/* ── Pages privées — tous les rôles ── */}
       <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>} />
       <Route path="/posts" element={<PrivateRoute><Posts /></PrivateRoute>} />
