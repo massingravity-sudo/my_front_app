@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, ListTodo, MessageSquare, Calendar,
   FileText, BarChart3, Settings, Building2, FolderArchive,
-  ClipboardList, Lightbulb, Award, Shield, TrendingUp, Crown, Users,
+  ClipboardList, Lightbulb, Award, Shield, TrendingUp,
+  Crown, Users, Activity, Star, UserPlus, LogOut, ChevronRight,
 } from 'lucide-react';
-
-import { Activity, Star, UserPlus } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
-  const { user, isAdmin, isChefDept } = useAuth();
+  const navigate = useNavigate();
+  const { user, organization, orgName, isAdmin, isChefDept, logout } = useAuth();
 
   const [userMode, setUserMode] = useState(
     localStorage.getItem('userMode') || 'employee'
@@ -25,7 +25,12 @@ export default function Sidebar() {
     return () => window.removeEventListener('modeChanged', handleModeChange);
   }, []);
 
-  /* ── Navigations ── */
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // ── Navigations ────────────────────────────────────────────────────────────
   const employeeNavigation = [
     { name: 'Mes Tâches', path: '/tasks', icon: ListTodo },
     { name: 'Messages', path: '/messages', icon: MessageSquare },
@@ -38,17 +43,15 @@ export default function Sidebar() {
   ];
 
   const chefNavigation = [
-    { name: "Vue d'ensemble RH", path: '/hr', icon: TrendingUp },
-    { name: 'Tâches équipe', path: '/tasks', icon: ListTodo },
     { name: 'Suivi Équipe', path: '/suivi-equipe', icon: Activity },
     { name: 'Évaluations', path: '/evaluation', icon: Star },
     { name: 'Primes', path: '/primes', icon: Award },
     { name: 'Recrutement', path: '/recrutement', icon: UserPlus },
-    { name: 'Messages', path: '/messages', icon: MessageSquare },
     { name: 'Tâches', path: '/tasks', icon: ListTodo },
     { name: 'Congés', path: '/leaves', icon: Calendar },
+    { name: 'Messages', path: '/messages', icon: MessageSquare },
+    { name: 'Feedbacks', path: '/feedbacks/admin', icon: Lightbulb },
     { name: 'Paramètres', path: '/parametre', icon: Settings },
-
   ];
 
   const adminNavigation = [
@@ -60,13 +63,11 @@ export default function Sidebar() {
     { name: 'Archives', path: '/archives', icon: FolderArchive },
     { name: 'Enquêtes', path: '/surveys', icon: ClipboardList },
     { name: 'Feedbacks', path: '/feedbacks/admin', icon: Lightbulb },
-
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },
     { name: 'Chefs de département', path: '/manage-chefs', icon: Crown, highlight: true },
     { name: 'Paramètres', path: '/parametre', icon: Settings },
   ];
 
-  /* ── Choisir la nav selon le rôle ── */
   let navigation = employeeNavigation;
   if (isAdmin) {
     navigation = adminNavigation;
@@ -74,101 +75,226 @@ export default function Sidebar() {
     navigation = chefNavigation;
   }
 
-  /* ── Sous-titre ── */
-  const subtitle = isAdmin
-    ? 'Administration'
-    : isChefDept && userMode === 'chef'
-      ? `Chef · ${user?.department || 'Département'}`
-      : 'Espace Personnel';
-
-  /* ── Badge rôle ── */
-  const roleBadge = isAdmin
-    ? { label: 'ADMINISTRATEUR', bg: 'bg-red-600/20 border-red-500/30 text-red-300', icon: Shield }
+  // ── Badge rôle ─────────────────────────────────────────────────────────────
+  const roleConfig = isAdmin
+    ? { label: 'ADMINISTRATEUR', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: Shield }
     : isChefDept
-      ? { label: 'CHEF DEPT.', bg: 'bg-purple-600/20 border-purple-500/30 text-purple-300', icon: Award }
-      : { label: 'EMPLOYÉ', bg: 'bg-blue-600/20 border-blue-500/30 text-blue-300', icon: Users };
+      ? { label: 'CHEF DEPT.', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', icon: Award }
+      : { label: 'EMPLOYÉ', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', icon: Users };
 
-  const BadgeIcon = roleBadge.icon;
+  const RoleIcon = roleConfig.icon;
+
+  // Initiale utilisateur
+  const initiale = user?.full_name?.charAt(0)?.toUpperCase() || '?';
 
   return (
-    <div className="w-64 bg-slate-900 text-white h-screen flex flex-col flex-shrink-0">
+    <div style={{
+      width: 240, flexShrink: 0,
+      background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+      height: '100vh',
+      display: 'flex', flexDirection: 'column',
+      borderRight: '1px solid rgba(255,255,255,0.06)',
+    }}>
 
-      {/* ── Logo ── */}
-      <div className="p-6 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-            <Building2 className="w-6 h-6 text-white" />
+      {/* ── Header — Logo + Nom entreprise ────────────────────────────────── */}
+      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+
+        {/* Logo CommSight */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(102,126,234,0.35)',
+          }}>
+            <Building2 size={17} color="#fff" strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-xl font-bold">CommSight</h1>
-            <p className="text-xs text-slate-400">{subtitle}</p>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
+              CommSight
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>
+              Plateforme RH
+            </div>
+          </div>
+        </div>
+
+        {/* Nom de l'entreprise */}
+        <div style={{
+          padding: '10px 12px',
+          background: 'rgba(102,126,234,0.12)',
+          border: '1px solid rgba(102,126,234,0.2)',
+          borderRadius: 10,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 7, flexShrink: 0,
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 11, fontWeight: 700, color: '#fff',
+          }}>
+            {orgName?.charAt(0)?.toUpperCase() || 'C'}
+          </div>
+          <div style={{ overflow: 'hidden', flex: 1 }}>
+            <div style={{
+              fontSize: 12, fontWeight: 600, color: '#fff',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {orgName}
+            </div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+              {organization?.industry || 'Entreprise'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── Badge rôle ── */}
-      <div className="px-4 py-3 bg-slate-800/60">
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold ${roleBadge.bg}`}>
-          <BadgeIcon className="w-4 h-4" />
-          <span>{roleBadge.label}</span>
+      {/* ── Badge rôle ─────────────────────────────────────────────────────── */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '7px 10px', borderRadius: 8,
+          background: roleConfig.bg,
+          border: `1px solid ${roleConfig.color}30`,
+        }}>
+          <RoleIcon size={13} style={{ color: roleConfig.color, flexShrink: 0 }} />
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: roleConfig.color, letterSpacing: '0.08em' }}>
+            {roleConfig.label}
+          </span>
         </div>
       </div>
 
-      {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      {/* ── Navigation ─────────────────────────────────────────────────────── */}
+      <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 10px' }}>
         {navigation.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
 
           if (item.highlight) {
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                  : 'text-purple-300 bg-purple-900/20 border border-purple-800/40 hover:bg-purple-900/40 hover:text-purple-200'
-                  }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-semibold text-sm flex-1">{item.name}</span>
-                <span className="text-[10px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">
-                  ADMIN
-                </span>
+              <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '9px 12px', borderRadius: 9, marginBottom: 2,
+                  background: isActive
+                    ? 'linear-gradient(135deg, #7c3aed, #6d28d9)'
+                    : 'rgba(124,58,237,0.1)',
+                  border: `1px solid ${isActive ? 'transparent' : 'rgba(124,58,237,0.25)'}`,
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}>
+                  <Icon size={15} style={{ color: isActive ? '#fff' : '#a78bfa', flexShrink: 0 }} />
+                  <span style={{
+                    fontSize: 13, fontWeight: 600, flex: 1,
+                    color: isActive ? '#fff' : '#a78bfa',
+                  }}>
+                    {item.name}
+                  </span>
+                  {!isActive && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, color: '#fff',
+                      background: '#7c3aed', padding: '2px 5px', borderRadius: 4,
+                    }}>
+                      ADMIN
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           }
 
           return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-semibold text-sm">{item.name}</span>
+            <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 12px', borderRadius: 9, marginBottom: 2,
+                background: isActive
+                  ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                  : 'transparent',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Icon size={15} style={{
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 13, fontWeight: isActive ? 600 : 400,
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
+                }}>
+                  {item.name}
+                </span>
+                {isActive && (
+                  <ChevronRight size={13} style={{ color: 'rgba(255,255,255,0.6)', marginLeft: 'auto' }} />
+                )}
+              </div>
             </Link>
           );
         })}
       </nav>
 
-      {/* ── Info utilisateur en bas ── */}
-      <div className="p-4 border-t border-slate-800">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-xs">
-              {user?.full_name?.charAt(0).toUpperCase()}
-            </span>
+      {/* ── Profil utilisateur + Déconnexion ───────────────────────────────── */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 12px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          marginBottom: 8,
+        }}>
+          {/* Avatar */}
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+            background: 'linear-gradient(135deg, #667eea, #764ba2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, color: '#fff',
+          }}>
+            {initiale}
           </div>
-          <div className="overflow-hidden">
-            <p className="text-sm font-semibold text-white truncate">{user?.full_name}</p>
-            <p className="text-xs text-slate-400 truncate">{user?.email}</p>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{
+              fontSize: 12.5, fontWeight: 600, color: '#fff',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {user?.full_name}
+            </div>
+            <div style={{
+              fontSize: 11, color: 'rgba(255,255,255,0.35)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {user?.email}
+            </div>
           </div>
         </div>
-        <div className="text-xs text-slate-600 text-center">CommSight · © 2026</div>
+
+        {/* Bouton déconnexion */}
+        <button
+          onClick={handleLogout}
+          style={{
+            width: '100%', padding: '8px 12px', borderRadius: 9,
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex', alignItems: 'center', gap: 8,
+            cursor: 'pointer', transition: 'all 0.15s',
+            color: 'rgba(239,68,68,0.8)', fontSize: 12.5, fontWeight: 500,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.15)';
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.4)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)';
+          }}
+        >
+          <LogOut size={14} />
+          Se déconnecter
+        </button>
+
+        <div style={{ textAlign: 'center', marginTop: 10, fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>
+          CommSight · © 2026
+        </div>
       </div>
     </div>
   );

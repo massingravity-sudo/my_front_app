@@ -4,6 +4,8 @@ import { AppProvider } from './context/AppContext'
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import RegisterEmployee from './pages/RegisterEmployee'
+import Welcome from './pages/Welcome'
 import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import Posts from './pages/Posts'
@@ -17,21 +19,31 @@ import FeedbacksAdmin from './pages/FeedbacksAdmin'
 import Archives from './pages/Archives'
 import ForgotPassword from './pages/ForgotPassword'
 import Parametre from './pages/Parametre'
-
 import PricingPage from './pages/PricingPage'
 import ManageChefs from './pages/ManageChefs'
 import Evaluation from './pages/Evaluation'
 import Primes from './pages/Primes'
 import SuiviEquipe from './pages/SuiviEquipe'
 import Recrutement from './pages/Recrutement'
-import RegisterEmployee from './pages/RegisterEmployee';
-/* ── Loader commun ── */
+
+/* ── Loader ── */
 function Loader() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 mx-auto mb-4" />
-        <p className="text-slate-600 dark:text-white text-lg">Chargement...</p>
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: '50%',
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTopColor: '#667eea',
+          animation: 'spin 0.8s linear infinite',
+          margin: '0 auto 16px',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Chargement...</p>
       </div>
     </div>
   )
@@ -41,18 +53,19 @@ function Loader() {
 function PublicRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader />
-  if (!loading && user) {
-    if (user.role === 'admin') return <Navigate to="/dashboard" replace />
-    return <Navigate to="/tasks" replace />
+  if (user) {
+    return user.role === 'admin'
+      ? <Navigate to="/dashboard" replace />
+      : <Navigate to="/tasks" replace />
   }
   return children
 }
 
-/* ── Route privée — tout utilisateur connecté ── */
+/* ── Route privée ── */
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader />
-  if (!loading && !user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" replace />
   return children
 }
 
@@ -60,33 +73,46 @@ function PrivateRoute({ children }) {
 function AdminRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader />
-  if (!loading && !user) return <Navigate to="/login" replace />
-  if (!loading && user && user.role !== 'admin') return <Navigate to="/tasks" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'admin') return <Navigate to="/tasks" replace />
   return children
 }
 
-/* ── Route Chef de département + Admin ── */
+/* ── Route Chef + Admin ── */
 function ChefRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) return <Loader />
-  if (!loading && !user) return <Navigate to="/login" replace />
-  if (!loading && user && user.role !== 'chef_departement' && user.role !== 'admin')
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'chef_departement' && user.role !== 'manager' && user.role !== 'admin')
     return <Navigate to="/tasks" replace />
   return children
 }
 
-/* ── Toutes les routes ── */
+/* ── Route Welcome — accessible seulement si connecté ── */
+function WelcomeRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <Loader />
+  if (!user) return <Navigate to="/login" replace />
+  return children
+}
+
 function AppRoutes() {
   return (
     <Routes>
-      {/* ── Pages publiques ── */}
+      {/* ── Publiques ── */}
       <Route path="/landing" element={<PublicRoute><LandingPage /></PublicRoute>} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+
+      {/* ── Inscription employé via invitation (pas besoin d'être connecté) ── */}
       <Route path="/register-employee" element={<RegisterEmployee />} />
-      {/* ── Pages privées — tous les rôles ── */}
+
+      {/* ── Page de bienvenue ── */}
+      <Route path="/welcome" element={<WelcomeRoute><Welcome /></WelcomeRoute>} />
+
+      {/* ── Privées — tous rôles ── */}
       <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>} />
       <Route path="/posts" element={<PrivateRoute><Posts /></PrivateRoute>} />
       <Route path="/leaves" element={<PrivateRoute><Leaves /></PrivateRoute>} />
@@ -97,20 +123,17 @@ function AppRoutes() {
       <Route path="/archives" element={<PrivateRoute><Archives /></PrivateRoute>} />
       <Route path="/parametre" element={<PrivateRoute><Parametre /></PrivateRoute>} />
 
-      {/* ── Pages Admin uniquement ── */}
+      {/* ── Admin uniquement ── */}
       <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
       <Route path="/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
       <Route path="/manage-chefs" element={<AdminRoute><ManageChefs /></AdminRoute>} />
 
-      {/* ── Pages Chef + Admin ── */}
+      {/* ── Chef + Admin ── */}
       <Route path="/feedbacks/admin" element={<ChefRoute><FeedbacksAdmin /></ChefRoute>} />
-
       <Route path="/evaluation" element={<ChefRoute><Evaluation /></ChefRoute>} />
       <Route path="/primes" element={<ChefRoute><Primes /></ChefRoute>} />
       <Route path="/suivi-equipe" element={<ChefRoute><SuiviEquipe /></ChefRoute>} />
       <Route path="/recrutement" element={<ChefRoute><Recrutement /></ChefRoute>} />
-
-
 
       {/* ── Fallback ── */}
       <Route path="*" element={<Navigate to="/login" replace />} />
