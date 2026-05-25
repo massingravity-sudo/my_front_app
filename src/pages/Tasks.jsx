@@ -102,12 +102,12 @@ export default function Tasks() {
 
   const getPriorityLabel = (priority) => {
     const labels = {
-      low: ' Basse',
-      medium: ' Moyenne',
-      high: ' Haute',
+      low: '🟢 Basse',
+      medium: '🟡 Moyenne',
+      high: '🟠 Haute',
       urgent: ' Urgente'
     };
-    return labels[priority] || priority;
+    return labels[priority] || priority || 'Inconnue';
   };
 
   return (
@@ -316,7 +316,7 @@ function TaskCard({ task, onStatusChange, currentStatus, columns, getPriorityCol
           <h4 className="font-semibold text-gray-800 text-sm">{task.title}</h4>
         </div>
         <span className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(task.priority)}`}>
-          {getPriorityLabel(task.priority).split(' ')[0]}
+          {getPriorityLabel(task.priority)?.split(' ')[0] ?? ''}
         </span>
       </div>
 
