@@ -65,7 +65,9 @@ export default function Dashboard() {
     bannerBd: '#e2e8f0',
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (user) load(); // ← attend que l'user soit chargé
+  }, [user]);
 
   const load = async () => {
     try { const r = await dashboardAPI.getStats(); setStats(r.data); }

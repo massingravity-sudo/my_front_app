@@ -50,7 +50,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await axios.post(`${API_URL}/login`, { email, password });
+      console.log('🔑 Réponse login:', res.data); // ← ajoute ça
       const { token: newToken, user: newUser } = res.data;
+      console.log('🔑 Token reçu:', newToken);    // ← et ça
 
       // Récupérer l'organisation après login
       _saveSession(newToken, newUser);
